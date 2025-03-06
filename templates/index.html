@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Bank</title>
+    <script>
+        let lastUpdateTime = 0;
+        function updateActivity() {
+            let now = Date.now();
+            if (now - lastUpdateTime > 5000) { // Limit updates to once every 5 seconds
+                lastUpdateTime = now;
+                fetch("https://localhost:8080/update_activity", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "activity": "active" })
+                }).catch(error => console.error("Error updating activity:", error));
+            }
+        }
+
+        function transfer() {
+            updateActivity();
+            let receiver_id = document.getElementById("receiver_id").value;
+            let amount = document.getElementById("amount").value;
+
+            if (!receiver_id || !amount || amount <= 0) {
+                alert("Please enter a valid receiver ID and amount.");
+                return;
+            }
+
+            fetch("https://localhost:8080/transfer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ receiver_id, amount })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message || data.error));
+        }
+
+        // Track user interactions with throttling
+        document.addEventListener("click", updateActivity);
+        document.addEventListener("keypress", updateActivity);
+        document.addEventListener("mousemove", updateActivity);
+    </script>
+    <script>
+        document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+            // Send POST request to logout when the page is hidden
+            navigator.sendBeacon("/logout", JSON.stringify({}));
+            }
+        });
+        
+        window.addEventListener("unload", function () {
+            navigator.sendBeacon("/logout");
+        });
+    </script>
+</head>
+<body>
+    <h1>Welcome to the Digital Bank</h1>
+    <p>This is a basic local server for a digital banking simulation.</p>
+    
+    <h2>Transfer Money</h2>
+    <input type="number" id="receiver_id" placeholder="Receiver ID">
+    <input type="number" id="amount" placeholder="Amount">
+    <button onclick="transfer()">Transfer</button>
+
+</body>
+</html>
