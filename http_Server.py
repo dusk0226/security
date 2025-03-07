@@ -15,10 +15,6 @@ port_number = 8080 # 8080 for localhost or 5000 (flask defualt port number)
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = 'my_secret_key' # unsecure key only for test
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
-app.config['SESSION_COOKIE_SECURE'] = True   # Use only with HTTPS
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent cross-site access
-app.config['SESSION_PERMANENT'] = False  # Ensure session is non-permanent
 
 SESSION_TIMEOUT = 300  # after this time of no activities, log the user out 
 
@@ -35,15 +31,6 @@ def enforce_session_timeout():
             return redirect(url_for("login"))
 
         session["last_activity"] = time.time()  # Update last activity timestamp
-
-@app.after_request
-def prevent_caching(response):
-    """Prevent browser caching login data."""
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-    return response
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -110,7 +97,7 @@ def transfer():
         conn.commit()
 
         return jsonify({"message": "Transfer successful"}), 200
-
+    
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
     """Log user out and clear the session."""
@@ -132,8 +119,7 @@ if __name__ == "__main__":
     print(f"server starts at {start_time}")
 
     try:
-        context = ("cert.pem", "key.pem")  # Use the generated SSL certificate
-        app.run(host=host_name, port=port_number, ssl_context=context)
+        app.run(host=host_name, port=port_number)
     except KeyboardInterrupt:
         pass
 
