@@ -2,13 +2,33 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import time
 from datetime import datetime
 import sqlite3
+import random
+import smtplib
+from email.mime.text import MIMEText
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 bank_database = "bank.db"
+EMAIL_SENDER = "wk20230401@gmail.com"
+APP_PASSWORD = "llaj japl kdye cgwi"
+
 def get_db_connect():
     """Establish a connection to the SQLite database."""
     conn = sqlite3.connect(database=bank_database)
     conn.row_factory = sqlite3.Row
     return conn
+
+def send_email(to_email, subject, body):
+    """Create SMTP server via gmail"""
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = EMAIL_SENDER
+    msg["To"] = to_email
+    
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        # server.starttls()
+        server.login(EMAIL_SENDER, APP_PASSWORD)
+        server.sendmail(EMAIL_SENDER, to_email, msg.as_string())
 
 host_name = 'localhost' # Must be 'localhost' for https
 port_number = 8080 # 8080 for localhost or 5000 (flask defualt port number)
@@ -21,6 +41,9 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent cross-site access
 app.config['SESSION_PERMANENT'] = False  # Ensure session is non-permanent
 
 SESSION_TIMEOUT = 300  # after this time of no activities, log the user out 
+
+# Implement rate limiting
+limiter = Limiter(get_remote_address, app=app, default_limits=["15 per minute"])
 
 @app.before_request
 def enforce_session_timeout():
@@ -51,7 +74,6 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        print(username,':',password)
         # record valid username
         with get_db_connect() as conn:
             user = conn.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password)).fetchone()
@@ -59,12 +81,28 @@ def login():
             if user:
                 session['username'] = username
                 session['user_id'] = user['id']
+                session['email'] = user['email']
+                session['verification_key'] = str(random.randint(0, 10e5)).zfill(6)
+                send_email(session['email'], "Verification Key",
+                           f"""Your Verification Key to the digital bank 
+                           is {session['verification_key']}""")
                 session['last_activity'] = time.time()
-                flash("Login successful!", "success")
-                return redirect(url_for('home'))
+                return redirect(url_for('verify'))
             else:
                 flash("Invalid credentials, please try again.", "error")
     return render_template('login.html') 
+
+@app.route('/verify', methods=['GET', 'POST'])
+def verify():
+    """Verify the login by sending keys to users' email addresses."""
+    if request.method == 'POST':
+        email_key = request.form['key']
+        if email_key == session['verification_key']:
+            return redirect(url_for('home'))
+        else:
+            flash("Invalid key, please try again.", "error")
+            return jsonify({"error": "Invalid credentials"}), 403
+    return render_template('verification.html')
 
 @app.route("/update_activity", methods=["POST"])
 def update_activity():

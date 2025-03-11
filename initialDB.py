@@ -15,17 +15,19 @@ def init_db():
     # Create Users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            idx INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            balance REAL NOT NULL DEFAULT 100.0
+            email TEXT NOT NULL,
+            balance REAL NOT NULL DEFAULT 0.0
         )
     ''')
 
     # Create Transactions table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            idx INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_id INTEGER,
             receiver_id INTEGER,
             amount REAL,
@@ -35,20 +37,20 @@ def init_db():
         )
     ''')
 
-    # Insert 10 users into the database
+    # Insert users into the database
     users_data = [
-        (1001, 'member1', 'pass1', 50.0),
-        (1002, 'member2', 'pass2', 500.0),
-        (1003, 'member3', 'pass3', 1000.0),
-        (1004, 'member4', 'pass4', 120.0),       
+        (1001, 'member1', 'pass1', 'wk20230401@outlook.com', 50.0),
+        (1002, 'member2', 'pass2', 'wk20230401@outlook.com', 500.0),
+        (1003, 'member3', 'pass3', 'wk20230401@outlook.com', 1000.0),
+        (1004, 'member4', 'pass4', 'wk20230401@outlook.com', 120.0),       
     ]
 
     # Insert users, ignore if they already exist
-    cursor.executemany("INSERT OR IGNORE INTO users (id, username, password, balance) VALUES (?, ?, ?, ?)", users_data)
+    cursor.executemany("INSERT OR IGNORE INTO users (id, username, password, email, balance) VALUES (?, ?, ?, ?, ?)", users_data)
 
     conn.commit()
     conn.close()
     print("Database initialized with 4 users.")
 
-# Run this function once to initialize the database with 10 users
+# Initialize the database 
 init_db()
