@@ -8,9 +8,10 @@ from email.mime.text import MIMEText
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-bank_database = "bank.db"
-EMAIL_SENDER = "wk20230401@gmail.com"
-APP_PASSWORD = "llaj japl kdye cgwi"
+bank_database = "bank.db" # The digital bank database. 
+EMAIL_SENDER = "wk20230401@gmail.com" # The email address for sending verification emails.
+APP_PASSWORD = "llaj japl kdye cgwi" # The password corresponding the email address for SMTP.
+ENABLE_ECHECK = True # If enable email verification.
 
 def get_db_connect():
     """Establish a connection to the SQLite database."""
@@ -24,11 +25,15 @@ def send_email(to_email, subject, body):
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
     msg["To"] = to_email
-    
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        # server.starttls()
-        server.login(EMAIL_SENDER, APP_PASSWORD)
-        server.sendmail(EMAIL_SENDER, to_email, msg.as_string())
+    try: 
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            # server.starttls()
+            server.login(EMAIL_SENDER, APP_PASSWORD)
+            server.sendmail(EMAIL_SENDER, to_email, msg.as_string())
+        return True
+    except smtplib.SMTPException as e:
+        print(f"Email sending failed: {e}")
+        return False
 
 host_name = 'localhost' # Must be 'localhost' for https
 port_number = 8080 # 8080 for localhost or 5000 (flask defualt port number)
@@ -81,13 +86,20 @@ def login():
             if user:
                 session['username'] = username
                 session['user_id'] = user['id']
-                session['email'] = user['email']
-                session['verification_key'] = str(random.randint(0, 10e5)).zfill(6)
-                send_email(session['email'], "Verification Key",
-                           f"""Your Verification Key to the digital bank 
-                           is {session['verification_key']}""")
-                session['last_activity'] = time.time()
-                return redirect(url_for('verify'))
+                if ENABLE_ECHECK:
+                    session['email'] = user['email']
+                    session['verification_key'] = str(random.randint(0, 10e5)).zfill(6)
+                    success = send_email(session['email'], "Verification Key",
+                            f"""Your Verification Key to the digital bank 
+                            is {session['verification_key']}""")
+                    session['last_activity'] = time.time()
+                    if success:
+                        return redirect(url_for('verify'))
+                    else:
+                        return jsonify({"status": "error", "message": "Email sending failed."}), 401
+                else:
+                    session['last_activity'] = time.time()
+                    return redirect(url_for('home'))
             else:
                 flash("Invalid credentials, please try again.", "error")
     return render_template('login.html') 
