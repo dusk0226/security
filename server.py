@@ -176,7 +176,7 @@ def home():
     return render_template("index.html")
 
 if __name__ == "__main__":
-    # record start time
+    # record server start time
     start_timestamp = time.time()
     start_time = datetime.fromtimestamp(start_timestamp).strftime('%Y-%m-%d %H:%M:%S')
     print(f"server starts at {start_time}")
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
 
-    # record end time
+    # record server end time
     end_timestamp = time.time()
     end_time = datetime.fromtimestamp(end_timestamp).strftime('%Y-%m-%d %H:%M:%S')
     print(f"server ends at {end_time}")
