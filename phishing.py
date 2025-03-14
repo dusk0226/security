@@ -29,7 +29,7 @@ host_name = 'localhost'
 port_number_list = list(range(8080,8080+5))
 
 server_list = []
-for port in zip(port_number_list):
+for port in port_number_list:
     server_list.append(f'http://{host_name}:{port}')
 
 email_list = ['wk20230401@outlook.com','z2095393809@outlook.com']
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     print(f"severs start at {start_time}")
 
     try:
-        # send_phishing_email()
+        send_phishing_email()
         launch_multiple_servers()
     except KeyboardInterrupt:
         pass
