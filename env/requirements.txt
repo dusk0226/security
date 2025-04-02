@@ -7,6 +7,6 @@ Flask
 flask-cors
 flask-restful
 requests
-
-
+nltk
+scikit-learn
 
