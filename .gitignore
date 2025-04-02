@@ -1,0 +1,2 @@
+phishing_dataset/*
+!phishing_dataset/dataset/.gitkeep
