@@ -1,0 +1,20 @@
+{
+  "name": "Phishing Detector",
+  "version": "1.0",
+  "description": "Blocks known phishing websites.",
+  "manifest_version": 3,
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "https://gist.githubusercontent.com/Goonshan/fc39d41c4df30d7a87cca3a41e34819d/raw/aa5876e8207d384feb54ed6efd02a4cfb8c3cde8/phishing_domains.json"  
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

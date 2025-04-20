@@ -1,0 +1,12 @@
+jupyter
+jupyterlab
+pandas
+numpy<2
+matplotlib
+Flask
+flask-cors
+flask-restful
+requests
+
+
+
